@@ -1,0 +1,277 @@
+// This is your Prisma schema file
+// Docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id       String @id @default(cuid())
+  email    String @unique
+  password String
+  name     String
+
+  currency      String @default("INR")
+  timezone      String @default("UTC")
+  monthlyIncome Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions Transaction[]
+  quests       Quest[]
+  goals        Goal[]
+  bosses       BossBattle[]
+  progression  Progression?
+  leaderboard  Leaderboard?
+
+  @@index([email])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// FINANCIAL DATA
+// ============================================================================
+
+model Transaction {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amount      Int
+  category    String
+  description String?
+  date        DateTime
+
+  isRecurring        Boolean @default(false)
+  recurringFrequency String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+  @@index([category])
+  @@index([userId, date])
+}
+
+model Goal {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+  category      String
+  targetAmount  Int
+  currentAmount Int      @default(0)
+  targetDate    DateTime
+
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([targetDate])
+}
+
+// ============================================================================
+// GAMIFICATION SYSTEM
+// ============================================================================
+
+model Quest {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type        String
+  description String?
+  xpReward    Int     @default(0)
+
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  assignedAt DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([assignedAt])
+  @@index([type])
+  @@index([userId, completed])
+}
+
+model BossBattle {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
+  description   String?
+  category      String?
+  anomalyAmount Int
+
+  healthPercent Int       @default(100)
+  status        String    @default("ACTIVE")
+  defeatedAt    DateTime?
+
+  detectedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+}
+
+model Progression {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  level   Int @default(1)
+  totalXp Int @default(0)
+
+  streak        Int       @default(0)
+  longestStreak Int       @default(0)
+  lastQuestDate DateTime?
+
+  totalQuestsCompleted Int @default(0)
+  totalXpEarned        Int @default(0)
+  bossesDefeated       Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([level])
+}
+
+model Leaderboard {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  rank    Int
+  level   Int
+  totalXp Int
+
+  updatedAt DateTime @updatedAt
+
+  @@index([rank])
+}
+
+// ============================================================================
+// SESSIONS & AUTHENTICATION
+// ============================================================================
+
+model Session {
+  id     String @id @default(cuid())
+  userId String
+
+  token     String   @unique
+  expiresAt DateTime
+
+  userAgent String?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([userId])
+}
+
+// ============================================================================
+// SPENDING PATTERNS & INSIGHTS
+// ============================================================================
+
+model SpendingPattern {
+  id     String @id @default(cuid())
+  userId String
+
+  category           String
+  month              String
+  totalAmount        Int
+  averageDailyAmount Int
+
+  weekOverWeekChange   Float?
+  monthOverMonthChange Float?
+
+  isAnomaly     Boolean @default(false)
+  anomalyReason String?
+
+  analyzedAt DateTime @default(now())
+
+  @@unique([userId, category, month])
+  @@index([userId])
+  @@index([isAnomaly])
+}
+
+// ============================================================================
+// AUDIT & LOGGING
+// ============================================================================
+
+model AuditLog {
+  id     String @id @default(cuid())
+  userId String
+
+  action   String
+  entity   String
+  entityId String
+
+  changes Json?
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+}
+
+// ============================================================================
+// UTILITY MODELS
+// ============================================================================
+
+model CategoryMapping {
+  id         String @id @default(cuid())
+  keyword    String @unique
+  category   String
+  confidence Float  @default(0.9)
+
+  createdAt DateTime @default(now())
+
+  @@index([keyword])
+}
+
+model NotificationQueue {
+  id     String @id @default(cuid())
+  userId String
+
+  type    String
+  title   String
+  message String
+
+  sent   Boolean   @default(false)
+  sentAt DateTime?
+
+  priority  Int      @default(0)
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([sent])
+  @@index([type])
+}

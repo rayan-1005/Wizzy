@@ -1,0 +1,330 @@
+// This is your Prisma schema file
+// Docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  password  String    // bcryptjs hashed
+  name      String
+  
+  // User preferences
+  currency  String    @default("INR")
+  timezone  String    @default("UTC")
+  monthlyIncome Int
+  
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  // Relations
+  transactions  Transaction[]
+  quests        Quest[]
+  goals         Goal[]
+  bosses        BossBattle[]
+  progression   Progression?
+  leaderboard   Leaderboard?
+  
+  @@index([email])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// FINANCIAL DATA
+// ============================================================================
+
+model Transaction {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Transaction details
+  amount    Int       // In smallest currency unit (e.g., paise for INR)
+  category  String    // Food, Transport, Utilities, Entertainment, Other
+  description String?
+  date      DateTime
+  
+  // Recurring
+  isRecurring Boolean  @default(false)
+  recurringFrequency String? // daily, weekly, monthly
+  
+  // Metadata
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([date])
+  @@index([category])
+  @@index([userId, date])
+}
+
+model Goal {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Goal details
+  title     String
+  description String?
+  category  String    // vacation, emergency_fund, down_payment, education, etc.
+  targetAmount Int
+  currentAmount Int    @default(0)
+  targetDate DateTime
+  
+  // Status
+  completedAt DateTime?
+  
+  // Metadata
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([targetDate])
+}
+
+// ============================================================================
+// GAMIFICATION SYSTEM
+// ============================================================================
+
+model Quest {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Quest type
+  type      String    // LOG_EXPENSE, TRANSFER_SAVINGS, REVIEW_CATEGORY, STAY_UNDER_BUDGET, ADD_GOAL
+  description String?
+  
+  // Rewards
+  xpReward  Int       @default(0)
+  
+  // Status
+  completed Boolean   @default(false)
+  completedAt DateTime?
+  
+  // Dates
+  assignedAt DateTime  @default(now())
+  expiresAt DateTime   // Quests typically expire after 24 hours
+  createdAt DateTime   @default(now())
+  
+  @@index([userId])
+  @@index([assignedAt])
+  @@index([type])
+  @@index([userId, completed])
+}
+
+model BossBattle {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Boss details
+  name      String    // "The Spending Phantom"
+  description String?
+  
+  // Category this boss is associated with (optional)
+  category  String?
+  
+  // Boss strength
+  anomalyAmount Int   // Amount of money unaccounted for
+  
+  // Health (0-100%)
+  healthPercent Int    @default(100)
+  
+  // Status
+  status    String    @default("ACTIVE") // ACTIVE, WEAKENING, DEFEATED
+  defeatedAt DateTime?
+  
+  // Challenge duration
+  detectedAt DateTime  @default(now())
+  expiresAt DateTime   // 30-day challenge window
+  
+  // Metadata
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])
+}
+
+model Progression {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Level & XP
+  level     Int       @default(1)
+  totalXp   Int       @default(0)
+  
+  // Streak tracking
+  streak    Int       @default(0)
+  longestStreak Int   @default(0)
+  lastQuestDate DateTime?
+  
+  // Stats
+  totalQuestsCompleted Int @default(0)
+  totalXpEarned Int @default(0)
+  bossesDefeated Int @default(0)
+  
+  // Timestamps
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  
+  @@index([level])
+}
+
+model Leaderboard {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Ranking
+  rank      Int
+  
+  // Stats snapshot
+  level     Int
+  totalXp   Int
+  
+  // Cached for performance
+  updatedAt DateTime  @updatedAt
+  
+  @@index([rank])
+}
+
+// ============================================================================
+// SESSIONS & AUTHENTICATION
+// ============================================================================
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  
+  // Token data
+  token     String    @unique
+  expiresAt DateTime
+  
+  // Metadata
+  userAgent String?
+  ipAddress String?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([token])
+  @@index([userId])
+}
+
+// ============================================================================
+// SPENDING PATTERNS & INSIGHTS (Cache Tables)
+// ============================================================================
+
+model SpendingPattern {
+  id        String    @id @default(cuid())
+  userId    String
+  
+  // Pattern details
+  category  String
+  month     String    // YYYY-MM format
+  totalAmount Int
+  averageDailyAmount Int
+  
+  // Trend data
+  weekOverWeekChange Float? // percentage change
+  monthOverMonthChange Float?
+  
+  // Anomaly flags
+  isAnomaly Boolean   @default(false)
+  anomalyReason String? // e.g., "spending 50% above weekly average"
+  
+  // Metadata
+  analyzedAt DateTime  @default(now())
+  
+  @@unique([userId, category, month])
+  @@index([userId])
+  @@index([isAnomaly])
+}
+
+// ============================================================================
+// AUDIT & LOGGING
+// ============================================================================
+
+model AuditLog {
+  id        String    @id @default(cuid())
+  userId    String
+  
+  // Action details
+  action    String    // expense_created, goal_completed, boss_defeated, level_up
+  entity    String    // Transaction, Goal, BossBattle, Progression
+  entityId  String
+  
+  // Change tracking
+  changes   Json?     // Store before/after state
+  
+  // Metadata
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([action])
+}
+
+// ============================================================================
+// UTILITY MODELS (For future features)
+// ============================================================================
+
+model CategoryMapping {
+  id        String    @id @default(cuid())
+  
+  // Maps merchant name/description to category
+  keyword   String    @unique
+  category  String
+  
+  // Weight/confidence
+  confidence Float   @default(0.9)
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([keyword])
+}
+
+model NotificationQueue {
+  id        String    @id @default(cuid())
+  userId    String
+  
+  // Notification details
+  type      String    // quest_completed, goal_milestone, boss_defeated, level_up, alert
+  title     String
+  message   String
+  
+  // Delivery status
+  sent      Boolean   @default(false)
+  sentAt    DateTime?
+  
+  // Metadata
+  priority  Int       @default(0) // Higher = more urgent
+  expiresAt DateTime
+  
+  createdAt DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([sent])
+  @@index([type])
+}
+
+// ============================================================================
+// NOTES ON DESIGN
+// ============================================================================
