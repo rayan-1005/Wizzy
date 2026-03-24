@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import prisma from '../config/database';
 import { AppError } from '../middlewares/errorHandler';
 import { ERRORS } from '../utils/constants';
 import { emitToUser } from '../config/socket';

@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import prisma from '../config/database';
 
 beforeAll(async () => {
   // Use test database (set TEST_DATABASE_URL in .env.test)

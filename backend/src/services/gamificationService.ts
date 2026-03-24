@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import prisma from '../config/database';
 import { emitToUser } from '../config/socket';
 import { XP_REWARDS, LEVEL_THRESHOLDS, LEVEL_TITLES, QUEST_DESCRIPTIONS } from '../utils/constants';
 import { logger } from '../utils/logger';

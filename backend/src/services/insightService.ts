@@ -1,4 +1,4 @@
-import { prisma } from '../config/database';
+import prisma from '../config/database';
 import { IDashboardInsight, ICategoryBreakdown, ISpendingTrend, IAnomaly, ICoachingTip } from '../types';
 
 export const insightService = {

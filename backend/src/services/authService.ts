@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { prisma } from '../config/database';
+import prisma  from '../config/database';
 import { signToken, signRefreshToken, verifyToken } from '../utils/jwt';
 import { AppError } from '../middlewares/errorHandler';
 import { ERRORS } from '../utils/constants';
