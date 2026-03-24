@@ -141,7 +141,6 @@ npm run dev
 | GET | `/api/insights/dashboard` | Full financial snapshot |
 | GET | `/api/insights/trends` | Spending trend data |
 
-Full API docs: [`docs/API.md`](docs/API.md)
 
 ---
 
@@ -164,19 +163,6 @@ Rules:
 
 ---
 
-## Roadmap
-
-| Phase | Focus | Target |
-|---|---|---|
-| ✅ Scaffold | Backend structure, DB schema, configs | Done |
-| 🔄 Phase 1 | Auth, user profiles, error handling | Week 1 |
-| Phase 2 | Expense CRUD, savings goals, quests | Weeks 2–3 |
-| Phase 3 | Boss battles, levels, streaks, leaderboard | Weeks 3–4 |
-| Phase 4 | Socket.IO, analytics, background jobs | Weeks 4–5 |
-| Phase 5 | Testing, security, deployment | Weeks 5–6 |
-| **Launch** | Production on Railway | ~May 2, 2026 |
-
----
 
 ## Development
 
