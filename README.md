@@ -67,28 +67,43 @@ Built on a clean black-and-orange design aesthetic, Wizzy combines hard financia
 ## Project Structure
 
 ```
-wizzy/
-├── frontend/                    # React app
+Wizzy/
+├── frontend/                    # React + Vite app
 │   ├── src/
+│   │   ├── api/                 # Axios clients, API call functions
 │   │   ├── components/          # Dashboard, BossBattle, QuestCard, etc.
-│   │   ├── pages/               # Dashboard, Expenses, Goals, Insights
 │   │   ├── hooks/               # useSocket, useAuth, useExpenses
-│   │   └── styles/              # Tailwind config, global styles
-│   └── tailwind.config.js
+│   │   ├── pages/               # Dashboard, Expenses, Goals, Insights
+│   │   ├── store/               # Global state management
+│   │   ├── types/               # TypeScript interfaces
+│   │   ├── index.css            # Global styles
+│   │   └── main.tsx             # App entry point
+│   ├── index.html
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── vite.config.ts
+│   └── tsconfig.json
 │
 └── backend/                     # Express API
-    └── src/
-        ├── server.ts            # Entry point
-        ├── config/              # DB, Redis, env validation
-        ├── routes/              # auth, expenses, quests, goals, bosses, insights
-        ├── controllers/         # Request handlers
-        ├── services/            # Business logic
-        ├── middlewares/         # Auth, error handling, validation
-        ├── events/              # Socket.IO handlers
-        ├── jobs/                # BullMQ background jobs
-        ├── prisma/              # Schema + migrations
-        ├── types/               # TypeScript interfaces
-        └── utils/               # Logger, JWT helpers, validators
+    ├── prisma/                  # Schema + migrations (root level)
+    ├── src/
+    │   ├── server.ts            # Entry point
+    │   ├── config/              # DB, Redis, env validation
+    │   ├── controllers/         # Request handlers
+    │   ├── events/              # Socket.IO handlers
+    │   ├── jobs/                # BullMQ background jobs
+    │   ├── middlewares/         # Auth, error handling, validation
+    │   ├── prisma/              # Prisma client
+    │   ├── routes/              # auth, expenses, quests, goals, bosses, insights
+    │   ├── services/            # Business logic
+    │   ├── tests/               # Jest test files
+    │   ├── types/               # TypeScript interfaces
+    │   └── utils/               # Logger, JWT helpers, validators
+    ├── .env.example
+    ├── docker-compose.yml
+    ├── Dockerfile
+    ├── jest.config.js
+    └── tsconfig.json
 ```
 
 ---
@@ -141,6 +156,7 @@ npm run dev
 | GET | `/api/insights/dashboard` | Full financial snapshot |
 | GET | `/api/insights/trends` | Spending trend data |
 
+Full API docs: [`docs/API.md`](docs/API.md)
 
 ---
 
@@ -163,6 +179,19 @@ Rules:
 
 ---
 
+## Roadmap
+
+| Phase | Focus | Target |
+|---|---|---|
+| ✅ Scaffold | Backend structure, DB schema, configs | Done |
+| 🔄 Phase 1 | Auth, user profiles, error handling | Week 1 |
+| Phase 2 | Expense CRUD, savings goals, quests | Weeks 2–3 |
+| Phase 3 | Boss battles, levels, streaks, leaderboard | Weeks 3–4 |
+| Phase 4 | Socket.IO, analytics, background jobs | Weeks 4–5 |
+| Phase 5 | Testing, security, deployment | Weeks 5–6 |
+| **Launch** | Production on Railway | ~May 2, 2026 |
+
+---
 
 ## Development
 
