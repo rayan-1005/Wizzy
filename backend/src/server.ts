@@ -4,7 +4,7 @@ import http from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import { validateEnv } from './config/env';
-import { connectDatabase } from './config/database';
+import prisma from './config/database';
 import { connectRedis } from './config/redis';
 import { initSocket } from './config/socket';
 import { registerSocketHandlers } from './events/socketHandlers';
@@ -48,7 +48,6 @@ registerSocketHandlers(io);
 
 // ── Startup ───────────────────────────────────────────────────────
 const bootstrap = async () => {
-  await connectDatabase();
   await connectRedis();
 
   httpServer.listen(config.PORT, () => {
